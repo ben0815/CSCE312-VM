@@ -1,0 +1,5 @@
+//test comment
+
+push constant 2
+push constant 3
+add
