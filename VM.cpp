@@ -47,7 +47,6 @@ std::string
 Parse(std::string _line) {
   size_t sz = _line.size();
   std::string translated = "";
-  std::string c = std::to_string(++count);
 
   //Check if command is a push constant x command
   if(_line.find("push") < sz) {
@@ -61,8 +60,10 @@ Parse(std::string _line) {
     translated = "@SP\nAM=M-1\nD=M\nA=A-1\nM=M-D\n";
   else if(_line == "neg")
     translated = "@SP\nAM=M-1\nD=M\nM=-D";
-  else if(_line == "eq")
-    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@EQTRUE" + c + "\nD;JEQ\n@SP\nM=0\n@EQEND" + c + "\n0;JMP\n(EQTRUE)" + c + "\n@SP\nA=M-1\nM=-1\n(EQEND)" + c + "\n";
+  else if(_line == "eq") {
+    std::string c = std::to_string(++count);
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@EQTRUE" + c + "\nD;JEQ\n@SP\nM=0\n@EQEND" + c + "\n0;JMP\n(EQTRUE" + c + ")\n@SP\nA=M-1\nM=-1\n(EQEND" + c + ")\n";
+  }
   else if(_line == "gt")
     translated = "";
   else if(_line == "lt")
