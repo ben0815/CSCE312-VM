@@ -4,8 +4,6 @@
 #include <vector>
 #include <cctype>
 
-using namespace std;
-
 ////////////////////////////////////////////////////////////////////////////////
 //I have placed a "@TODO" where things need to be added.
 //If you have any questions about the code just text me or put them at the top
@@ -20,15 +18,20 @@ using namespace std;
 //operation (sub, neg, and, etc.) and add it to the Parse function
 ////////////////////////////////////////////////////////////////////////////////
 
-string
-ParsePush(string _line) {
+//Global count variable
+//Necessary to make sure if a file contains multiple eq's that each label is
+//different
+size_t count = 0;
+
+std::string
+ParsePush(std::string _line) {
   size_t sz = _line.size();
-  string command = "";
+  std::string command = "";
 
   //Check type of push command
   if(_line.find("constant") < sz) {
     //Get number then use it to translate into assembly
-    string number = (_line.substr(12, sz - 12));
+    std::string number = (_line.substr(12, sz - 12));
     if (number == "1")
       command = "@SP\nA=M\nM=1\n@SP\nM=M+1\n";
     else
@@ -40,10 +43,11 @@ ParsePush(string _line) {
   return command;
 }
 
-string
-Parse(string _line) {
+std::string
+Parse(std::string _line) {
   size_t sz = _line.size();
-  string translated = "";
+  std::string translated = "";
+  std::string c = std::to_string(++count);
 
   //Check if command is a push constant x command
   if(_line.find("push") < sz) {
@@ -58,7 +62,7 @@ Parse(string _line) {
   else if(_line == "neg")
     translated = "@SP\nAM=M-1\nD=M\nM=-D";
   else if(_line == "eq")
-    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@EQTRUE\nD;JEQ\n@SP\nM=0\n@EQEND\n0;JMP\n(EQTRUE)\n@SP\nA=M-1\nM=-1\n(EQEND)\n
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@EQTRUE" + c + "\nD;JEQ\n@SP\nM=0\n@EQEND" + c + "\n0;JMP\n(EQTRUE)" + c + "\n@SP\nA=M-1\nM=-1\n(EQEND)" + c + "\n";
   else if(_line == "gt")
     translated = "";
   else if(_line == "lt")
@@ -73,8 +77,8 @@ Parse(string _line) {
   return translated;
 }
 
-string
-Clean(string _line) {
+std::string
+Clean(std::string _line) {
   //Search for '//' in each line
   size_t n = _line.find("//");
 
@@ -82,7 +86,7 @@ Clean(string _line) {
   if(n < _line.size())
     _line.erase(n, _line.size());
 
-  string cleaned = "";
+  std::string cleaned = "";
 
   //remove spaces
   for(int i = 0; i < _line.size(); ++i) {
@@ -94,25 +98,25 @@ Clean(string _line) {
 }
 
 int main() {
-  string filename;
+  std::string filename;
 
-  cout << "Enter the name of the file you want to translate:" << endl;
-  cin >> filename;
+  std::cout << "Enter the name of the file you want to translate:" << std::endl;
+  std::cin >> filename;
 
   //Construct input stream (.vm file)
-  ifstream ifs(filename);
-  ofstream ofs(filename.substr(0, filename.size() - 2) + "asm");
+  std::ifstream ifs(filename);
+  std::ofstream ofs(filename.substr(0, filename.size() - 2) + "asm");
 
-  string line;
+  std::string line;
   while(getline(ifs, line)) {
     //Get each line of VM commands and remove any comments
-    string cleaned = Clean(line);
+    std::string cleaned = Clean(line);
 
     //Remove any empty lines
     //Translate lines into assembly code and output to .asm file
     if(!cleaned.empty()) {
-      string command = Parse(cleaned);
-      ofs << command << endl;
+      std::string command = Parse(cleaned);
+      ofs << command << std::endl;
     }
   }
 
