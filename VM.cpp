@@ -69,11 +69,11 @@ Parse(std::string _line) {
   else if(_line == "lt")
     translated = "";
   else if(_line == "and")
-    translated = "";
+    translated = "@SP\nAM=M-1\nD=M\n@SP\nM=M-1\nA=M\nM=M&D\n@SP\nM=M+1";
   else if(_line == "or")
-    translated = "";
+    translated = "@SP\nAM=M-1\nD=M\n@SP\nM=M-1\nA=M\nM=M|D\n@SP\nM=M+1";
   else if(_line == "not")
-    translated = "";
+    translated = "@SP\nAM=M-1\nM=!M\n@SP\nM=M+1";
 
   return translated;
 }
