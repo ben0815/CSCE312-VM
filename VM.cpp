@@ -7,7 +7,7 @@
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
-//I have placed "@TODO's" where things need to be added.
+//I have placed a "@TODO" where things need to be added.
 //If you have any questions about the code just text me or put them at the top
 //here and commit to git.
 //
@@ -17,7 +17,7 @@ using namespace std;
 //translates to assembly code
 //
 //All we need to do for project 7 is to figure out the assembly code for each
-//binary operation (sub, neg, and, etc.) and add it to the Parse function
+//operation (sub, neg, and, etc.) and add it to the Parse function
 ////////////////////////////////////////////////////////////////////////////////
 
 string
@@ -30,9 +30,9 @@ ParsePush(string _line) {
     //Get number then use it to translate into assembly
     string number = (_line.substr(12, sz - 12));
     if (number == "1")
-      command = "@SP\nA=M\nM=" + number + "\n@SP\nM=M+1\n";
+      command = "@SP\nA=M\nM=1\n@SP\nM=M+1\n";
     else
-      command = "@SP\nA=M\n@" + number + "\nM=A\n@SP\nM=M+1\n";
+      command = "@" + number + "\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
   }
   //@TODO
   //Different push commands for project 8 will go here (local, this, etc.)
@@ -50,15 +50,15 @@ Parse(string _line) {
     translated = ParsePush(_line);
   }
   //@TODO
-  //Add assembly code for each binary operation
+  //Add assembly code for each operation
   else if(_line == "add")
-    translated = "@SP\nA=M\nA=A-1\nD=M\nA=A-1\nD=D+M\nM=D\nD=A+1\n@SP\nM=D";
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nM=D+M\n";
   else if(_line == "sub")
-    translated = "";
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nM=M-D\n";
   else if(_line == "neg")
-    translated = "";
+    translated = "@SP\nAM=M-1\nD=M\nM=-D";
   else if(_line == "eq")
-    translated = "";
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@EQTRUE\nD;JEQ\n@SP\nM=0\n@EQEND\n0;JMP\n(EQTRUE)\n@SP\nA=M-1\nM=-1\n(EQEND)\n
   else if(_line == "gt")
     translated = "";
   else if(_line == "lt")

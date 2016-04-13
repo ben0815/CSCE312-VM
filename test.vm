@@ -1,5 +1,9 @@
 //test comment
 
-push constant                    1
+push constant 1
 push constant 3
 add
+
+push constant 5
+push constant 5
+eq
