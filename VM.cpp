@@ -4,20 +4,6 @@
 #include <vector>
 #include <cctype>
 
-////////////////////////////////////////////////////////////////////////////////
-//I have placed a "@TODO" where things need to be added.
-//If you have any questions about the code just text me or put them at the top
-//here and commit to git.
-//
-//Currently it reads in from an input .vm file then cleans each line (removes
-//comments and extra spacing) and parses each line.
-//The Parse function checks if the command is a push, add, sub, etc. and
-//translates to assembly code
-//
-//All we need to do for project 7 is to figure out the assembly code for each
-//operation (sub, neg, and, etc.) and add it to the Parse function
-////////////////////////////////////////////////////////////////////////////////
-
 //Global count variable
 //Necessary to make sure if a file contains multiple eq's that each label is
 //different
