@@ -28,6 +28,7 @@ ParsePush(std::string _line) {
 
   return command;
 }
+g
 
 std::string
 Parse(std::string _line) {
@@ -37,29 +38,40 @@ Parse(std::string _line) {
   //Check if command is a push constant x command
   if(_line.find("push") < sz) {
     translated = ParsePush(_line);
+    return translated;
   }
-  //@TODO
-  //Add assembly code for each operation
   else if(_line == "add")
     translated = "@SP\nAM=M-1\nD=M\nA=A-1\nM=D+M\n";
   else if(_line == "sub")
     translated = "@SP\nAM=M-1\nD=M\nA=A-1\nM=M-D\n";
   else if(_line == "neg")
-    translated = "@SP\nAM=M-1\nD=M\nM=-D";
+    translated = "@SP\nA=M-1\nD=M\nM=-D";
   else if(_line == "eq") {
     std::string c = std::to_string(++count);
-    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@EQTRUE" + c + "\nD;JEQ\n@SP\nM=0\n@EQEND" + c + "\n0;JMP\n(EQTRUE" + c + ")\n@SP\nA=M-1\nM=-1\n(EQEND" + c + ")\n";
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@EQTRUE" + c +
+      "\nD;JEQ\n@SP\nA=M-1\nM=0\n@EQEND" + c + "\n0;JMP\n(EQTRUE" + c +
+      ")\n@SP\nA=M-1\nM=-1\n(EQEND" + c + ")\n";
   }
-  else if(_line == "gt")
-    translated = "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nD=M-D\n@EQTRUE" + c + "\nD;JGT\n@0\nD=A\n@EQEND" + c + "\n0;JMP\n(EQTRUE" + c + ")\n@0\nA=A-1\nD=A\n@EQEND" + c + "\n0;JMP\n(EQEND" + c + ")\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
-  else if(_line == "lt")
-    translated = "";
+  else if(_line == "gt") {
+    std::string c = std::to_string(++count);
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@GTTRUE" + c +
+      "\nD;JGT\n@SP\nA=M-1\nM=0\n@GTEND" + c + "\n0;JMP\n(GTTRUE" + c +
+      ")\n@SP\nA=M-1\nM=-1\n(GTEND" + c +")\n";
+  }
+  else if(_line == "lt") {
+    std::string c = std::to_string(++count);
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@LTTRUE" + c +
+      "\nD;JLT\n@SP\nA=M-1\nM=0\n@LTEND" + c + "\n0;JMP\n(LTTRUE" + c +
+      ")\n@SP\nA=M-1\nM=-1\n(LTEND" + c +")\n";
+  }
   else if(_line == "and")
-    translated = "@SP\nAM=M-1\nD=M\n@SP\nM=M-1\nA=M\nM=M&D\n@SP\nM=M+1";
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nM=M&D\n";
   else if(_line == "or")
-    translated = "@SP\nAM=M-1\nD=M\n@SP\nM=M-1\nA=M\nM=M|D\n@SP\nM=M+1";
+    translated = "@SP\nAM=M-1\nD=M\nA=A-1\nM=M|D\n";
   else if(_line == "not")
-    translated = "@SP\nAM=M-1\nM=!M\n@SP\nM=M+1";
+    translated = "@SP\nA=M-1\nM=!M\n";
+  else
+    translated = "";
 
   return translated;
 }
