@@ -51,7 +51,7 @@ Parse(std::string _line) {
     translated = "@SP\nAM=M-1\nD=M\nA=A-1\nD=M-D\n@EQTRUE" + c + "\nD;JEQ\n@SP\nM=0\n@EQEND" + c + "\n0;JMP\n(EQTRUE" + c + ")\n@SP\nA=M-1\nM=-1\n(EQEND" + c + ")\n";
   }
   else if(_line == "gt")
-    translated = "";
+    translated = "@SP\nAM=M-1\nD=M\n@SP\nAM=M-1\nD=M-D\n@EQTRUE" + c + "\nD;JGT\n@0\nD=A\n@EQEND" + c + "\n0;JMP\n(EQTRUE" + c + ")\n@0\nA=A-1\nD=A\n@EQEND" + c + "\n0;JMP\n(EQEND" + c + ")\n@SP\nA=M\nM=D\n@SP\nM=M+1\n";
   else if(_line == "lt")
     translated = "";
   else if(_line == "and")
