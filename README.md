@@ -1,8 +1,11 @@
 # CSCE312-VM
 
 # Compile instructions
-# $ make
+$ make
 
 # Run instructions
-# $ ./vm
-# Enter name of file to translate
+Type the following to run the program
+
+$ ./vm
+
+Then enter name of file to translate
