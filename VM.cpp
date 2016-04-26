@@ -5,13 +5,11 @@
 #include <cctype>
 #include <stdlib.h>
 #include <unordered_set>
+#include <unistd.h>
+#include <dirent.h>
 
 //Global count variable
 size_t count = 0;
-
-//Global vector for labels
-std::unordered_set<std::string> labels;
-
 
 std::string
 ParsePush(std::string _line) {
@@ -118,9 +116,6 @@ std::string
 TranslateLabel(std::string _label, bool isIf) {
   std::string translated = "";
 
-  if(labels.find(_label) == labels.end())
-    labels.insert(_label);
-
   if(isIf)
     translated = "@SP\nAM=M-1\nD=M\n@" + _label  + "\nD;JGT\n";
   else
@@ -134,7 +129,6 @@ Parse(std::string _line) {
   size_t sz = _line.size();
   std::string translated = "";
 
-  //Check if command is a push constant x command
   if(_line.find("push") < sz) {
     translated = ParsePush(_line);
     return translated;
@@ -145,7 +139,6 @@ Parse(std::string _line) {
   }
   else if(_line.find("label") < sz) {
     std::string label = _line.substr(5, sz - 5);
-    labels.insert(label);
     translated = "(" + label + ")\n";
 
     return translated;
@@ -216,28 +209,86 @@ Clean(std::string _line) {
   return cleaned;
 }
 
-int main() {
-  std::string filename;
+int main(int argc, char** argv) {
+  std::vector<std::string> files;
+  const char *directory = "";
+  bool isDir = false;
 
-  std::cout << "Enter the name of the file you want to translate:" << std::endl;
-  std::cin >> filename;
+  //Usage: ./vm -d <directory>
+  //     : ./vm -f <filepath>
 
-  //Construct input stream (.vm file)
-  std::ifstream ifs(filename);
-  std::ofstream ofs(filename.substr(0, filename.size() - 2) + "asm");
+  char c;
+  while((c = getopt(argc, argv, "d:f:")) != -1) {
+    switch (c) {
+      case 'd':
+        directory = optarg;
+        isDir = true;
+        break;
+      case 'f':
+        files.push_back(optarg);
+        break;
+      case '?':
+        if(optopt == 'd' || optopt == 'f')
+          std::cerr << "Options requires an argument." << std::endl;
+        else if(isprint(optopt))
+          std::cerr << "Unknown option `-" << c << "`." << std::endl;
+        else
+          std::cerr << "Unknown option character `" << optopt << "`" << std::endl;
+        exit(1);
+      default:
+        std::cerr << "Something went wrong." << std::endl;
+        exit(1);
+    }
+  }
 
-  labels.clear();
+  if(files.empty()) {
+    std::cerr << "Bad usage: ./vm -d <directory>" << std::endl;
+    std::cerr << "           ./vm -f <filepath>" <<std::endl;
+    return 1;
+  }
 
-  std::string line;
-  while(getline(ifs, line)) {
-    //Get each line of VM commands and remove any comments
-    std::string cleaned = Clean(line);
+  //Populate files with all '.vm' files in given directory
+  if(isDir) {
+    DIR *dir;
+    struct dirent *ent;
 
-    //Remove any empty lines
-    //Translate lines into assembly code and output to .asm file
-    if(!cleaned.empty()) {
-      std::string command = Parse(cleaned);
-      ofs << command << std::endl;
+    dir = opendir(directory);
+    if(dir != NULL) {
+      while((ent = readdir(dir))) {
+      std::string filename(ent->d_name);
+        if(filename.find(".vm") < filename.size())
+          files.push_back(filename);
+      }
+    }
+  }
+
+  //Get name of resulting asm file from directory or from file to be translated
+  std::string asmFile = "";
+  if(isDir) {
+    std::string outFile(directory);
+    if(outFile[outFile.size() - 1] == '/')
+      outFile = outFile.substr(0, outFile.size() - 1);
+    asmFile = outFile;
+  }
+  else
+    asmFile = files[0];
+
+  std::ofstream ofs(asmFile.substr(0, asmFile.size() - 2) + "asm");
+  std::string line = "";
+
+  //For each file read from it and output to one '.asm' file
+  for(int i = 0; i < files.size(); ++i) {
+    std::ifstream ifs(files[i]);
+    while(getline(ifs, line)) {
+      //Get each line of VM commands and remove any comments
+      std::string cleaned = Clean(line);
+
+      //Remove any empty lines
+      //Translate lines into assembly code and output to .asm file
+      if(!cleaned.empty()) {
+        std::string command = Parse(cleaned);
+        ofs << command << std::endl;
+      }
     }
   }
 
