@@ -6,6 +6,7 @@
 # Run instructions
 Type the following to run the program
 
-    ./vm
+    ./vm -d <directory>
+    ./vm -f <filepath>
 
 Then enter name of file to translate
