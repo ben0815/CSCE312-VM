@@ -11,5 +11,3 @@ Type the following to run the program
 or    
     
     ./vm -f <filepath>
-
-Then enter name of file to translate
