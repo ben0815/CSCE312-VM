@@ -4,11 +4,14 @@
 #include <vector>
 #include <cctype>
 #include <stdlib.h>
+#include <unordered_set>
 
 //Global count variable
-//Necessary to make sure if a file contains multiple eq's that each label is
-//different
 size_t count = 0;
+
+//Global vector for labels
+std::unordered_set<std::string> labels;
+
 
 std::string
 ParsePush(std::string _line) {
@@ -110,6 +113,22 @@ ParsePop(std::string _line) {
 
   return command;
 }
+
+std::string
+TranslateLabel(std::string _label, bool isIf) {
+  std::string translated = "";
+
+  if(labels.find(_label) == labels.end())
+    labels.insert(_label);
+
+  if(isIf)
+    translated = "@SP\nAM=M-1\nD=M\n@" + _label  + "\nD;JGT\n";
+  else
+    translated = "@" + _label + "\n0;JMP\n";
+
+  return translated;
+}
+
 std::string
 Parse(std::string _line) {
   size_t sz = _line.size();
@@ -123,6 +142,23 @@ Parse(std::string _line) {
   else if(_line.find("pop") < sz) {
     translated = ParsePop(_line);
     return translated;
+  }
+  else if(_line.find("label") < sz) {
+    std::string label = _line.substr(5, sz - 5);
+    labels.insert(label);
+    translated = "(" + label + ")\n";
+
+    return translated;
+  }
+  else if(_line.find("if-goto") < sz) {
+    std::string label = _line.substr(7, sz - 7);
+
+    return TranslateLabel(label, true);
+  }
+  else if(_line.find("goto") < sz) {
+    std::string label = _line.substr(4, sz - 4);
+
+    return TranslateLabel(label, false);
   }
   else if(_line == "add")
     translated = "@SP\nAM=M-1\nD=M\nA=A-1\nM=D+M\n";
@@ -189,6 +225,8 @@ int main() {
   //Construct input stream (.vm file)
   std::ifstream ifs(filename);
   std::ofstream ofs(filename.substr(0, filename.size() - 2) + "asm");
+
+  labels.clear();
 
   std::string line;
   while(getline(ifs, line)) {
