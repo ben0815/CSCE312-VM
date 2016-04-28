@@ -125,6 +125,83 @@ TranslateLabel(std::string _label, bool isIf) {
 }
 
 std::string
+TranslateWriteFunction(std::string _funct) {
+  //label with function name
+  std::string fname = untilNumInString(_funct);
+  std::string translated = "(" + fname + ")\n";
+  //determine number of args
+  _funct = _funct.substring(fname.size(), _funct.size());
+  int args = atoi(_funct.c_str());
+  //push that many to stack
+  for(int i=0; i<args ++i) {
+    translated += ParsePush("pushconstant0");
+  }
+  return translated;
+}
+
+std::string
+TranslateCallFunction(std::string _call) {
+  std::string translated;
+  //this function's specific stuff
+  //"(GLOBAL_CALL_CODE)\n0;JMP\n";
+  return translated;
+}
+
+std::string
+TranslateReturnFunction() {
+  std::string translated = "(GLOBAL_RETURN_CODE)\n0;JMP\n";
+  return translated;
+}
+
+std::string
+TranslateInitialization {
+  //required init bit
+  std::string translated = "@256\nD=A\n@SP\nM=D\n";
+  //TranslateCallFunction("Sys.init0");
+  
+  //GLOBAL CALL CODE init
+  translated += "(GLOBAL_CALL_CODE)\n@R13\nD=M\n";
+  std::string pushToStackCode = "@SP\nAM=M+1\nA=A-1\nM=D\n";
+  translated += pushToStackCode;
+  //save LCL
+  translated += "@LCL\nD=M\n";
+  translated += pushToStackCode;
+  //save ARG
+  translated += "@ARG\nD=M\n";
+  translated += pushToStackCode;
+  //save THIS
+  translated += "@THIS\nD=M\n";
+  translated += pushToStackCode;
+  //save THAT
+  translated += "@THAT\nD=M\n";
+  translated += pushToStackCode;
+  //reset ARG
+  
+  //reset LCL
+  
+  //transfer control
+  translated  += "@R15\nA=M\n0;JMP\n"
+  
+  //GLOBAL RETURN CODE init
+  translated += "(GLOBAL_RETURN_CODE)\n@LCL\nD=M\n@R13\nM=D\n@5\nD=A\n@R13\nA=M-D\nD=M\n@R6\nM=D\n"
+  //Put the return value
+  translated += ParsePop("popargument0");
+  //restore caller SP
+  translated+= "@ARG\nD=M+1\n@SP\nM=D\n" 
+  //restore caller THAT
+  translated+= "@R13\nAM=M-1\nD=M\n@THAT\nM=D\n" 
+  //restore caller THIS
+  translated+= "@R13\nAM=M-1\nD=M\n@THIS\nM=D\n" 
+  //restore caller ARG
+  translated+= "@R13\nAM=M-1\nD=M\n@ARG\nM=D\n" 
+  //restore caller LCL
+  translated+= "@R13\nAM=M-1\nD=M\n@LCL\nM=D\n"
+  //go to retAddress
+  translated+= "@R6\nA=M\n0;JMP\n"
+ return translated; 
+}
+
+std::string
 Parse(std::string _line) {
   size_t sz = _line.size();
   std::string translated = "";
@@ -152,6 +229,19 @@ Parse(std::string _line) {
     std::string label = _line.substr(4, sz - 4);
 
     return TranslateLabel(label, false);
+  }
+  else if(_line.find("function") < sz) {
+    std::string funct = _line.substr(8, sz-8);
+    
+    return TranslateWriteFunction(funct);
+  }
+  else if(_line.find("call") < sz) {
+    std::string call = _line.substr(4, sz-4);
+    
+    return TranslateCallFunction(call);
+  }
+  else if(_line.find("return") < sz) {
+    return TranslateReturnFunction();
   }
   else if(_line == "add")
     translated = "@SP\nAM=M-1\nD=M\nA=A-1\nM=D+M\n";
@@ -207,6 +297,18 @@ Clean(std::string _line) {
   }
 
   return cleaned;
+}
+
+std::int
+findNumInString(std::string _line) {
+  size_t n = 0;
+  for(int i = 0; i < _line.size(); ++i) {
+    if(!isdigit(_line[i])) {
+      ++n;
+      n = _line.size();
+    }
+  }
+  return  n;
 }
 
 int main(int argc, char** argv) {
