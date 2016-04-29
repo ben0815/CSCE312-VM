@@ -147,12 +147,12 @@ TranslateCallFunction(std::string _call) {
   //this function's specific stuff
   std::string fname = untilNumInString(_call);
   std::string numArgs = _call.substring(fname.size(), _call.size());
-  std::string returnLabel = fname + "_RETURN_"" + return_counter.to_string();
+  std::string returnLabel = fname + "_RETURN_" + return_counter.to_string();
   return_counter += 1;
   //save return address to stack
   translated += "@" + returnLabel + "\nD=A\n@R13\nM=D\n";
   translated += "@" + numArgs + "\nD=A\n@R14\nM=D\n";
-  translated += "@" + functionName;
+  translated += "@" + fname;
   translated += "\nD=A\n@R15\nM=D\n@GLOBAL_CALL_CODE\n0;JMP\n";
   //the return address
   translated += "(" + returnLabel + ")\n";
