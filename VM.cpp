@@ -10,6 +10,8 @@
 
 //Global count variable
 size_t count = 0;
+//Global return count variable
+int return_counter = 0;
 
 std::string
 ParsePush(std::string _line) {
@@ -141,9 +143,21 @@ TranslateWriteFunction(std::string _funct) {
 
 std::string
 TranslateCallFunction(std::string _call) {
-  std::string translated;
+  std::string translated = "";
   //this function's specific stuff
-  //"(GLOBAL_CALL_CODE)\n0;JMP\n";
+  std::string fname = untilNumInString(_call);
+  std::string numArgs = _call.substring(fname.size(), _call.size());
+  std::string returnLabel = fname + "_RETURN_"" + return_counter.to_string();
+  return_counter += 1;
+  //save return address to stack
+  translated += "@" + returnLabel + "\nD=A\n@R13\nM=D\n";
+  translated += "@" + numArgs + "\nD=A\n@R14\nM=D\n";
+  translated += "@" + functionName;
+  translated += "\nD=A\n@R15\nM=D\n@GLOBAL_CALL_CODE\n0;JMP\n";
+  //the return address
+  translated += "(" + returnLabel + ")\n";
+  //call genereic global call
+  translated += "(GLOBAL_CALL_CODE)\n0;JMP\n";
   return translated;
 }
 
@@ -154,10 +168,10 @@ TranslateReturnFunction() {
 }
 
 std::string
-TranslateInitialization {
+TranslateInitialization() {
   //required init bit
   std::string translated = "@256\nD=A\n@SP\nM=D\n";
-  //TranslateCallFunction("Sys.init0");
+  translated += TranslateCallFunction("Sys.init0");
   
   //GLOBAL CALL CODE init
   translated += "(GLOBAL_CALL_CODE)\n@R13\nD=M\n";
@@ -176,28 +190,29 @@ TranslateInitialization {
   translated += "@THAT\nD=M\n";
   translated += pushToStackCode;
   //reset ARG
-  
+  translated += "@SP\nD=M\n@R14\nD=D-M\n@5\nD=D-A\n@ARG\nM=D";
   //reset LCL
-  
+  translated += "@SP\nD=M\n@LCL\nM=D\n";
   //transfer control
-  translated  += "@R15\nA=M\n0;JMP\n"
+  translated  += "@R15\nA=M\n0;JMP\n";
   
   //GLOBAL RETURN CODE init
-  translated += "(GLOBAL_RETURN_CODE)\n@LCL\nD=M\n@R13\nM=D\n@5\nD=A\n@R13\nA=M-D\nD=M\n@R6\nM=D\n"
+  translated += "(GLOBAL_RETURN_CODE)\n@LCL\nD=M\n@R13\nM=D\n@5\nD=A\n@R13\nA=M-D\nD=M\n@R6\nM=D\n";
   //Put the return value
   translated += ParsePop("popargument0");
   //restore caller SP
-  translated+= "@ARG\nD=M+1\n@SP\nM=D\n" 
+  translated+= "@ARG\nD=M+1\n@SP\nM=D\n";
   //restore caller THAT
-  translated+= "@R13\nAM=M-1\nD=M\n@THAT\nM=D\n" 
+  translated+= "@R13\nAM=M-1\nD=M\n@THAT\nM=D\n"; 
   //restore caller THIS
-  translated+= "@R13\nAM=M-1\nD=M\n@THIS\nM=D\n" 
+  translated+= "@R13\nAM=M-1\nD=M\n@THIS\nM=D\n";
   //restore caller ARG
-  translated+= "@R13\nAM=M-1\nD=M\n@ARG\nM=D\n" 
+  translated+= "@R13\nAM=M-1\nD=M\n@ARG\nM=D\n";
   //restore caller LCL
-  translated+= "@R13\nAM=M-1\nD=M\n@LCL\nM=D\n"
+  translated+= "@R13\nAM=M-1\nD=M\n@LCL\nM=D\n";
   //go to retAddress
-  translated+= "@R6\nA=M\n0;JMP\n"
+  translated+= "@R6\nA=M\n0;JMP\n";
+  
  return translated; 
 }
 
@@ -299,16 +314,15 @@ Clean(std::string _line) {
   return cleaned;
 }
 
-std::int
-findNumInString(std::string _line) {
-  size_t n = 0;
+std::string
+untilNumInString(std::string _line) {
+  std::string str = "";
   for(int i = 0; i < _line.size(); ++i) {
-    if(!isdigit(_line[i])) {
-      ++n;
-      n = _line.size();
-    }
+    if(!isdigit(_line[i]))
+      i = _line.size();
+    str += _line[i];
   }
-  return  n;
+  return  str;
 }
 
 int main(int argc, char** argv) {
@@ -377,6 +391,10 @@ int main(int argc, char** argv) {
 
   std::ofstream ofs(asmFile.substr(0, asmFile.size() - 2) + "asm");
   std::string line = "";
+
+  //boostrap code + global call/return init
+  std::string initCode = TranslateInitialization();
+  ofs << initCode << std::endl;
 
   //For each file read from it and output to one '.asm' file
   for(int i = 0; i < files.size(); ++i) {
